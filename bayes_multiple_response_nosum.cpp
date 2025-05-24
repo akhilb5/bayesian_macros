@@ -76,7 +76,8 @@ void process_directory(const std::string& directory) {
 
     // 3. Compute sumRa
     std::vector<double> sumRa(R, 0.0);
-    for (size_t k = 15; k < 640; k++) {
+    //for (size_t k = 15; k < 640; k++) {
+    for (size_t k = 360; k < 1054; k++) {
         for (size_t i = 0; i < R; ++i) {
             sumRa[i] += ResponseData[i][k];
         }
@@ -85,11 +86,12 @@ void process_directory(const std::string& directory) {
     //for (size_t i = 0; i < R; ++i) {std::cout << sumRa[i] << "\n";}
 
     // 4. EM iterations
-    std::vector<double> s(R, 0.10);  // Initialize equally
+    std::vector<double> s(R, 20);  // Initialize equally
     std::vector<std::vector<double>> s_history(R);
-    for (int iter = 0; iter < 8000; ++iter) {
+    for (int iter = 0; iter < 250; ++iter) {
         std::vector<double> sumRsd(R, 0.0);
-        for (int i = 15; i < 640; i++) {
+        //for (int i = 15; i < 640; i++) {
+        for (int i = 360; i < 1054; i++) {
             double sumRs = 0.0;
             for (size_t j = 0; j < R; ++j)
                 sumRs += ResponseData[j][i] * s[j];
@@ -111,7 +113,7 @@ void process_directory(const std::string& directory) {
 
         // Normalize and record history
         for (size_t j = 0; j < R; ++j) {
-            s[j] /= sum_s;
+            //s[j] /= sum_s;
             s_history[j].push_back(s[j]);
         }
 
@@ -146,10 +148,20 @@ void process_directory(const std::string& directory) {
         g->SetLineWidth(2);
         graphs.push_back(g);
     }
+    double yMax = 0.0;
+    for (auto* g : graphs) {
+        for (int i = 0; i < g->GetN(); ++i) {
+            double x, y;
+            g->GetPoint(i, x, y);
+            if (y > yMax) yMax = y;
+        }
+    }
+    graphs[0]->GetYaxis()->SetRangeUser(0, yMax * 1.1);  // Add 10% margin
+
 
     graphs[0]->Draw("AL");
     for (size_t j = 1; j < R; ++j) {
-        if(s[j]> 1e-4)graphs[j]->Draw("L SAME");
+        graphs[j]->Draw("L SAME");
     }
 
     // auto* legend = new TLegend(0.7, 0.7, 0.9, 0.9);
@@ -159,6 +171,7 @@ void process_directory(const std::string& directory) {
     // legend->Draw();
 }
 int bayes_multiple_response_nosum() {
-    process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
+    //process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
+    process_directory("/Users/akhil/work_dir/baysean_example_UTK/Cs137");
     return 0;
 }

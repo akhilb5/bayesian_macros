@@ -73,7 +73,7 @@ void process_directory(const std::string& directory) {
         }
     }
 
-    size_t N = Data.size();
+    size_t N = ResponseData[0].size();//Data.size()/2;
     size_t R = ResponseData.size();
     std::vector<double> d;
     for (size_t i = 0; i < N; ++i)
@@ -148,8 +148,8 @@ void process_directory(const std::string& directory) {
         // scaled->SetLineColor(j % 8 + 1);
         // scaled->SetLineWidth(2);
         // scaledHists.push_back(scaled);
-        TH1D *scaled = (TH1D*)hTemp->Clone("added");
-        scaled->Scale(s[j]);
+        TH1D *scaled = (TH1D*)hTemp->Clone();
+        scaled->Add(hTemp,hTemp, s[j],-1);
         scaled->SetLineColor(j % 8 + 1);
         scaled->SetLineWidth(2);
         scaledHists.push_back(scaled);
@@ -171,6 +171,7 @@ void process_directory(const std::string& directory) {
 
     // 6. Draw: Data vs Sum
     auto* cCompare = new TCanvas("cCompare", "Data vs Sum of Responses", 800, 600);
+    cCompare->SetLogy();
     hData->Draw("HIST");
     sumHist->SetLineColor(kRed);
     sumHist->SetLineStyle(2);
@@ -184,11 +185,13 @@ void process_directory(const std::string& directory) {
     // 7. Draw: All Scaled Histograms
     auto* cAll = new TCanvas("cAll", "All Scaled Response Histograms", 800, 600);
     bool first = true;
+    cAll->SetLogy();
+    hData->Draw("HIST");
     sumHist->Draw("HIST SAME");
     for (size_t j = 0; j < R; ++j) {
         if (s[j] > 1e-4) {
             if (first) {
-                scaledHists[j]->Draw("HIST");
+                scaledHists[j]->Draw("HIST SAME");
                 //std::cout<<"scaledintergral"<<scaledHists[j]->Integral(1,-1)<<"\n";
                 first = false;
             } else {

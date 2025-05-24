@@ -73,8 +73,9 @@ void process_directory(const std::string& directory) {
         }
     }
 
-    size_t N = Data.size();
+    size_t N = ResponseData[0].size();//Data.size()/2;
     size_t R = ResponseData.size();
+    //std::cout << "N = " << N << ", R = " << R << " " << ResponseData[1].size()<< ResponseData[2].size() << "\n";
     std::vector<double> d;
     for (size_t i = 0; i < N; ++i)
         d.push_back(Data[i].second);
@@ -88,8 +89,8 @@ void process_directory(const std::string& directory) {
 
     // 3. Compute sumRa
     std::vector<double> sumRa(R, 0.0);
-    //for (size_t k = 360; k < 1054; ++k)
-    for (size_t k = 10; k < 600; ++k)
+    for (size_t k = 360; k < 1054; ++k)
+    //for (size_t k = 10; k < 600; ++k)
         for (size_t i = 0; i < R; ++i)
             sumRa[i] += ResponseData[i][k];
 
@@ -98,8 +99,8 @@ void process_directory(const std::string& directory) {
     std::vector<std::vector<double>> s_history(R);
     for (int iter = 0; iter < 5000; ++iter) {
         std::vector<double> sumRsd(R, 0.0); //15,640
-        //for (int i = 360; i < 1054; ++i) {
-        for (int i = 10; i < 600; ++i) {
+        for (int i = 360; i < 1054; ++i) {
+        //for (int i = 10; i < 600; ++i) {
             double sumRs = 0.0;
             for (size_t j = 0; j < R; ++j)
                 sumRs += ResponseData[j][i] * s[j];
@@ -199,7 +200,7 @@ void process_directory(const std::string& directory) {
     }
 }
 int bayes_multiple_response_no_history() {
-    process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
-    //process_directory("/Users/akhil/work_dir/baysean_example_UTK/Cs137");
+    //process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
+    process_directory("/Users/akhil/work_dir/baysean_example_UTK/Cs137");
     return 0;
 }
