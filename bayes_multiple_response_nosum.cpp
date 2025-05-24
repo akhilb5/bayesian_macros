@@ -135,7 +135,7 @@ void process_directory(const std::string& directory) {
                   << " \033[1;32mFinal s[" << j << "] = \033[0m"       // Green for "Final s[...] ="
                   << "\033[1;36m" << s[j] << "\033[0m" << "\n";        // Cyan for the scaling factor
     }
-    // 5. Plot scaling factor history
+    // Plot scaling factor history
     auto* canvas = new TCanvas("canvas", "Scaling Factors", 800, 600);
     std::vector<TGraph*> graphs;
     int colors[] = {kRed, kBlue, kGreen + 2, kMagenta, kCyan + 2, kOrange, kViolet, kTeal};

@@ -21,7 +21,6 @@
 #include <TGraphErrors.h>
 #include <TGraphAsymmErrors.h>
 #include <TMultiGraph.h>
-#include <TCanvas.h>
 #include <TLine.h>
 #include <TString.h>
 #include <TMath.h>
@@ -96,7 +95,7 @@ void process_directory(const std::string& directory) {
     // 4. EM Algorithm
     std::vector<double> s(R, 0.10);
     std::vector<std::vector<double>> s_history(R);
-    for (int iter = 0; iter < 5000; ++iter) {
+    for (int iter = 0; iter < 300; ++iter) {
         std::vector<double> sumRsd(R, 0.0); //15,640
         //for (int i = 360; i < 1054; ++i) {
         for (int i = 10; i < 600; ++i) {
@@ -114,10 +113,10 @@ void process_directory(const std::string& directory) {
             sum_s += s[j];
         }
 
-        // for (size_t j = 0; j < R; ++j) {
+        for (size_t j = 0; j < R; ++j) {
         //     s[j] /= sum_s;
-        //     s_history[j].push_back(s[j]);
-        // }
+            s_history[j].push_back(s[j]);
+        }
     }
 
     std::cout << "========== Final Scale Factors ==========\n";
@@ -200,6 +199,34 @@ void process_directory(const std::string& directory) {
             }
         }
     }
+    // Plot scaling factor history
+    auto* canvas = new TCanvas("canvas", "Scaling Factors", 800, 600);
+    std::vector<TGraph*> graphs;
+    int colors[] = {kRed, kBlue, kGreen + 2, kMagenta, kCyan + 2, kOrange, kViolet, kTeal};
+
+    for (size_t j = 0; j < R; ++j) {
+        auto* g = new TGraph(s_history[j].size());
+        for (int i = 0; i < s_history[j].size(); ++i)
+            g->SetPoint(i, i, s_history[j][i]);
+        g->SetLineColor(colors[j % 8]);
+        g->SetLineWidth(2);
+        graphs.push_back(g);
+    }
+    double yMax = 0.0;
+    for (auto* g : graphs) {
+        for (int i = 0; i < g->GetN(); ++i) {
+            double x, y;
+            g->GetPoint(i, x, y);
+            if (y > yMax) yMax = y;
+        }
+    }
+    graphs[0]->GetYaxis()->SetRangeUser(0, yMax * 1.1);  // Add 10% margin
+
+
+    graphs[0]->Draw("AL");
+    for (size_t j = 1; j < R; ++j) {
+        graphs[j]->Draw("L SAME");
+    }    
 }
 int bayes_multiple_response_sum_compare_no_reScale() {
     process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
