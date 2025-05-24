@@ -158,7 +158,7 @@ void process_directory(const std::string& directory) {
     // }
     // legend->Draw();
 }
-int bayes_multiple_response() {
+int bayes_multiple_response_nosum() {
     process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
     return 0;
 }

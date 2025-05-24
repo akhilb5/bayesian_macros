@@ -198,7 +198,7 @@ void process_directory(const std::string& directory) {
         }
     }
 }
-int bayes_multiple_response_sum_compare_no_reScale() {
+int bayes_multiple_response_no_history() {
     process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
     //process_directory("/Users/akhil/work_dir/baysean_example_UTK/Cs137");
     return 0;
