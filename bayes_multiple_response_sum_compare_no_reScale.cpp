@@ -71,7 +71,11 @@ void process_directory(const std::string& directory) {
             }
         }
     }
-
+    std::ofstream txt("response_file_names_order.txt");
+    for (int i = 0; i < responseFilenames.size(); ++i) {
+        std::string filename = responseFilenames[i];
+        txt << i << "\t" << filename << "\n";
+    }
     size_t N = ResponseData[0].size();//Data.size()/2;
     size_t R = ResponseData.size();
     std::vector<double> d;
