@@ -21,7 +21,6 @@
 #include <TGraphErrors.h>
 #include <TGraphAsymmErrors.h>
 #include <TMultiGraph.h>
-#include <TCanvas.h>
 #include <TLine.h>
 #include <TString.h>
 #include <TMath.h>
@@ -72,8 +71,12 @@ void process_directory(const std::string& directory) {
             }
         }
     }
-
-    size_t N = Data.size();
+    std::ofstream txt("response_file_names_order.txt");
+    for (int i = 0; i < responseFilenames.size(); ++i) {
+        std::string filename = responseFilenames[i];
+        txt << i << "\t" << filename << "\n";
+    }
+    size_t N = ResponseData[0].size();//Data.size()/2;
     size_t R = ResponseData.size();
     std::vector<double> d;
     for (size_t i = 0; i < N; ++i)
@@ -96,7 +99,7 @@ void process_directory(const std::string& directory) {
     // 4. EM Algorithm
     std::vector<double> s(R, 0.10);
     std::vector<std::vector<double>> s_history(R);
-    for (int iter = 0; iter < 5000; ++iter) {
+    for (int iter = 0; iter < 300; ++iter) {
         std::vector<double> sumRsd(R, 0.0); //15,640
         //for (int i = 360; i < 1054; ++i) {
         for (int i = 10; i < 600; ++i) {
@@ -114,10 +117,10 @@ void process_directory(const std::string& directory) {
             sum_s += s[j];
         }
 
-        // for (size_t j = 0; j < R; ++j) {
+        for (size_t j = 0; j < R; ++j) {
         //     s[j] /= sum_s;
-        //     s_history[j].push_back(s[j]);
-        // }
+            s_history[j].push_back(s[j]);
+        }
     }
 
     std::cout << "========== Final Scale Factors ==========\n";
@@ -148,8 +151,8 @@ void process_directory(const std::string& directory) {
         // scaled->SetLineColor(j % 8 + 1);
         // scaled->SetLineWidth(2);
         // scaledHists.push_back(scaled);
-        TH1D *scaled = (TH1D*)hTemp->Clone("added");
-        scaled->Scale(s[j]);
+        TH1D *scaled = (TH1D*)hTemp->Clone();
+        scaled->Add(hTemp,hTemp, s[j],-1);
         scaled->SetLineColor(j % 8 + 1);
         scaled->SetLineWidth(2);
         scaledHists.push_back(scaled);
@@ -171,6 +174,7 @@ void process_directory(const std::string& directory) {
 
     // 6. Draw: Data vs Sum
     auto* cCompare = new TCanvas("cCompare", "Data vs Sum of Responses", 800, 600);
+    cCompare->SetLogy();
     hData->Draw("HIST");
     sumHist->SetLineColor(kRed);
     sumHist->SetLineStyle(2);
@@ -184,11 +188,13 @@ void process_directory(const std::string& directory) {
     // 7. Draw: All Scaled Histograms
     auto* cAll = new TCanvas("cAll", "All Scaled Response Histograms", 800, 600);
     bool first = true;
+    cAll->SetLogy();
+    hData->Draw("HIST");
     sumHist->Draw("HIST SAME");
     for (size_t j = 0; j < R; ++j) {
         if (s[j] > 1e-4) {
             if (first) {
-                scaledHists[j]->Draw("HIST");
+                scaledHists[j]->Draw("HIST SAME");
                 //std::cout<<"scaledintergral"<<scaledHists[j]->Integral(1,-1)<<"\n";
                 first = false;
             } else {
@@ -197,6 +203,34 @@ void process_directory(const std::string& directory) {
             }
         }
     }
+    // Plot scaling factor history
+    auto* canvas = new TCanvas("canvas", "Scaling Factors", 800, 600);
+    std::vector<TGraph*> graphs;
+    int colors[] = {kRed, kBlue, kGreen + 2, kMagenta, kCyan + 2, kOrange, kViolet, kTeal};
+
+    for (size_t j = 0; j < R; ++j) {
+        auto* g = new TGraph(s_history[j].size());
+        for (int i = 0; i < s_history[j].size(); ++i)
+            g->SetPoint(i, i, s_history[j][i]);
+        g->SetLineColor(colors[j % 8]);
+        g->SetLineWidth(2);
+        graphs.push_back(g);
+    }
+    double yMax = 0.0;
+    for (auto* g : graphs) {
+        for (int i = 0; i < g->GetN(); ++i) {
+            double x, y;
+            g->GetPoint(i, x, y);
+            if (y > yMax) yMax = y;
+        }
+    }
+    graphs[0]->GetYaxis()->SetRangeUser(0, yMax * 1.1);  // Add 10% margin
+
+
+    graphs[0]->Draw("AL");
+    for (size_t j = 1; j < R; ++j) {
+        graphs[j]->Draw("L SAME");
+    }    
 }
 int bayes_multiple_response_sum_compare_no_reScale() {
     process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");

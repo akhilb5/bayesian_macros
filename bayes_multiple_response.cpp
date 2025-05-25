@@ -76,7 +76,7 @@ void process_directory(const std::string& directory) {
 
     // 3. Compute sumRa
     std::vector<double> sumRa(R, 0.0); //15,640
-    for (size_t k = 300; k < 1054; k++) {
+    for (size_t k = 360; k < 1054; k++) {
         for (size_t i = 0; i < R; ++i) {
             sumRa[i] += ResponseData[i][k];
         }
@@ -112,7 +112,7 @@ void process_directory(const std::string& directory) {
 
         // Normalize and record history
         for (size_t j = 0; j < R; ++j) {
-            s[j] /= sum_s;
+            //s[j] /= sum_s;
             s_history[j].push_back(s[j]);
         }
 
