@@ -49,7 +49,7 @@ std::vector<std::pair<double, double>> read_tsv(const std::string& filename) {
     return data;
 }
 
-void process_directory(const std::string& directory) {
+void process_directory(int fit_min, int fit_max, const std::string& directory) {
     std::vector<std::pair<double, double>> Data;
     std::vector<std::vector<double>> ResponseData;
     std::vector<std::string> responseFilenames;
@@ -68,10 +68,11 @@ void process_directory(const std::string& directory) {
                     values.push_back(p.second);
                 ResponseData.push_back(values);
                 responseFilenames.push_back(filename);
+                std::cout << "File: " << filename << " has " << values.size() << " entries.\n";
             }
         }
     }
-    std::ofstream txt("response_file_names_order.txt");
+    std::ofstream txt("../response_file_names_order.txt");
     for (int i = 0; i < responseFilenames.size(); ++i) {
         std::string filename = responseFilenames[i];
         txt << i << "\t" << filename << "\n";
@@ -92,35 +93,41 @@ void process_directory(const std::string& directory) {
     // 3. Compute sumRa
     std::vector<double> sumRa(R, 0.0);
     //for (size_t k = 360; k < 1054; ++k)
-    for (size_t k = 10; k < 600; ++k)
+    for (size_t k = fit_min; k < fit_max; ++k)
         for (size_t i = 0; i < R; ++i)
             sumRa[i] += ResponseData[i][k];
 
     // 4. EM Algorithm
     std::vector<double> s(R, 0.10);
     std::vector<std::vector<double>> s_history(R);
-    for (int iter = 0; iter < 300; ++iter) {
+    for (int iter = 0; iter < 1000; ++iter) {
         std::vector<double> sumRsd(R, 0.0); //15,640
         //for (int i = 360; i < 1054; ++i) {
-        for (int i = 10; i < 600; ++i) {
+        for (int i = fit_min; i < fit_max; ++i) {
+            //650 T 620 C
             double sumRs = 0.0;
             for (size_t j = 0; j < R; ++j)
                 sumRs += ResponseData[j][i] * s[j];
+            //std::cout << "sumRs = " << sumRs << "sumRsd[7]"<< sumRsd[7]<< "\n";
             if (std::abs(sumRs) < epsilon) continue;
             for (size_t j = 0; j < R; ++j)
                 sumRsd[j] += ResponseData[j][i] * s[j] * d[i] / sumRs;
         }
 
-        double sum_s = 0.0;
+        //double sum_s = 0.0;
         for (size_t j = 0; j < R; ++j) {
             s[j] = sumRsd[j] / sumRa[j];
-            sum_s += s[j];
+            //sum_s += s[j];
         }
 
         for (size_t j = 0; j < R; ++j) {
         //     s[j] /= sum_s;
             s_history[j].push_back(s[j]);
         }
+    }
+    double sum_s = 0.0;
+    for (size_t j = 0; j < R; ++j) {
+        sum_s += s[j];
     }
 
     std::cout << "========== Final Scale Factors ==========\n";
@@ -135,11 +142,17 @@ void process_directory(const std::string& directory) {
                   << " \033[1;32mFinal s[" << j << "] = \033[0m"       // Green for "Final s[...] ="
                   << "\033[1;36m" << s[j] << "\033[0m" << "\n";        // Cyan for the scaling factor
     }
+    std::cout << "////////////////////sumS = "<< sum_s <<"//////////////////////////"<<"\n"; 
+    for (size_t j = 0; j < R; ++j) {
+        if(s[j]> 1e-4) std::cout << "\033[1;34m" << responseFilenames[j] << "\033[0m"  // Blue for filename
+                  << " \033[1;32mFinal I[" << j << "] = \033[0m"       // Green for "Final s[...] ="
+                  << "\033[1;36m" << 100*(s[j]/sum_s)<< "%" << "\033[0m" << "\n";        // Cyan for the scaling factor
+    }
 
     // 5. Create scaled response histograms and combine them
     std::vector<TH1D*> scaledHists;
     TH1D* sumHist = nullptr;
-    TRandom3* randGen = new TRandom3();
+    //TRandom3* randGen = new TRandom3();
 
     for (size_t j = 0; j < R; ++j) {
         std::string name = "response_" + std::to_string(j);
@@ -177,8 +190,9 @@ void process_directory(const std::string& directory) {
     cCompare->SetLogy();
     hData->Draw("HIST");
     sumHist->SetLineColor(kRed);
-    sumHist->SetLineStyle(2);
+    sumHist->SetLineStyle(1);
     sumHist->Draw("HIST SAME");
+    scaledHists[39]->Draw("HIST SAME");
 
     TLegend* leg = new TLegend(0.7, 0.6, 0.9, 0.85);
     leg->AddEntry(hData, "Original Data", "l");
@@ -190,9 +204,8 @@ void process_directory(const std::string& directory) {
     bool first = true;
     cAll->SetLogy();
     hData->Draw("HIST");
-    sumHist->Draw("HIST SAME");
     for (size_t j = 0; j < R; ++j) {
-        if (s[j] > 1e-4) {
+        if (s[j] > 1e-8) {
             if (first) {
                 scaledHists[j]->Draw("HIST SAME");
                 //std::cout<<"scaledintergral"<<scaledHists[j]->Integral(1,-1)<<"\n";
@@ -203,6 +216,7 @@ void process_directory(const std::string& directory) {
             }
         }
     }
+    sumHist->Draw("HIST SAME");
     // Plot scaling factor history
     auto* canvas = new TCanvas("canvas", "Scaling Factors", 800, 600);
     std::vector<TGraph*> graphs;
@@ -233,7 +247,10 @@ void process_directory(const std::string& directory) {
     }    
 }
 int bayes_multiple_response_sum_compare_no_reScale() {
-    process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
+    //process_directory(5, 1024, "/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt_Total");
+    //process_directory(2, 1024, "/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt_center");
     //process_directory("/Users/akhil/work_dir/baysean_example_UTK/Cs137");
+    process_directory(5,1024,"/Users/akhil/work_dir/baysean_example_UTK/I136m_txt_Total");
+    //process_directory(5,1024,"/Users/akhil/work_dir/baysean_example_UTK/I136m_txt_Center");
     return 0;
 }
