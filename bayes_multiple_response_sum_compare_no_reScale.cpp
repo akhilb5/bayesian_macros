@@ -5,27 +5,13 @@
 #include <string>
 #include <filesystem>
 #include <cmath>
+
 #include <TH1D.h>
 #include <TGraph.h>
 #include <TCanvas.h>
 #include <TLegend.h>
-#include <TRandom3.h>
 #include <TROOT.h>
-#include <TApplication.h>
 #include <TStyle.h>
-#include <TSystem.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <TColor.h>
-#include <TLegend.h>
-#include <TGraphErrors.h>
-#include <TGraphAsymmErrors.h>
-#include <TMultiGraph.h>
-#include <TLine.h>
-#include <TString.h>
-#include <TMath.h>
-
-#include <TDirectory.h>
 namespace fs = std::filesystem;
 
 const double epsilon = 1e-10;
@@ -98,9 +84,9 @@ void process_directory(int fit_min, int fit_max, const std::string& directory) {
             sumRa[i] += ResponseData[i][k];
 
     // 4. EM Algorithm
-    std::vector<double> s(R, 0.10);
+    std::vector<double> s(R, 1);
     std::vector<std::vector<double>> s_history(R);
-    for (int iter = 0; iter < 1000; ++iter) {
+    for (int iter = 0; iter < 100; ++iter) {
         std::vector<double> sumRsd(R, 0.0); //15,640
         //for (int i = 360; i < 1054; ++i) {
         for (int i = fit_min; i < fit_max; ++i) {
@@ -192,7 +178,9 @@ void process_directory(int fit_min, int fit_max, const std::string& directory) {
     sumHist->SetLineColor(kRed);
     sumHist->SetLineStyle(1);
     sumHist->Draw("HIST SAME");
-    scaledHists[39]->Draw("HIST SAME");
+    scaledHists[43]->Draw("HIST SAME");
+    scaledHists[29]->Draw("HIST SAME");
+    scaledHists[36]->Draw("HIST SAME");
 
     TLegend* leg = new TLegend(0.7, 0.6, 0.9, 0.85);
     leg->AddEntry(hData, "Original Data", "l");
@@ -247,10 +235,11 @@ void process_directory(int fit_min, int fit_max, const std::string& directory) {
     }    
 }
 int bayes_multiple_response_sum_compare_no_reScale() {
-    //process_directory(5, 1024, "/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt_Total");
+    process_directory(5, 1024, "/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt_Total");
     //process_directory(2, 1024, "/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt_center");
     //process_directory("/Users/akhil/work_dir/baysean_example_UTK/Cs137");
-    process_directory(5,1024,"/Users/akhil/work_dir/baysean_example_UTK/I136m_txt_Total");
+    //process_directory(2,800,"/Users/akhil/work_dir/baysean_example_UTK/I136m_txt_Total");
+    //process_directory(2,800,"/Users/akhil/work_dir/baysean_example_UTK/I136m_txt_Total/I136m_full");
     //process_directory(5,1024,"/Users/akhil/work_dir/baysean_example_UTK/I136m_txt_Center");
     return 0;
 }

@@ -1,7 +1,9 @@
 import ROOT
 import os
+import ctypes
 import math
-
+import sys
+from ROOT import TApplication
 ROOT.gStyle.SetOptStat(0)
 epsilon = 1e-10
 
@@ -142,13 +144,47 @@ def process_directory(fit_min, fit_max, directory):
     graphs[0].Draw("AL")
     for j in range(1, R):
         graphs[j].Draw("L SAME")
+        # Update and draw canvases to ensure GUI rendering
+    cCompare.Update()
+    cCompare.Draw()
+
+    cAll.Update()
+    cAll.Draw()
+
+    canvas.Update()
+    canvas.Draw()
 
 
 def bayes_multiple_response_sum_compare_no_reScale():
     process_directory(5, 1024, "/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt_Total")
     return 0
 
+# if __name__ == "__main__":
+#     # DO NOT manually construct TApplication — PyROOT does it automatically!
+#     ROOT.gROOT.SetBatch(False)  # Ensure GUI mode
 
+#     bayes_multiple_response_sum_compare_no_reScale()
+
+#     # Keep GUI alive
+#     input("Press Enter to exit and close plots...")
 if __name__ == "__main__":
-    ROOT.gROOT.SetBatch(False)
+    ROOT.gROOT.SetBatch(False)  # Enable GUI mode
+
     bayes_multiple_response_sum_compare_no_reScale()
+
+    # Keep GUI responsive
+    print("Press Ctrl+C to close ROOT GUI.")
+    while True:
+        ROOT.gSystem.ProcessEvents()
+
+# if __name__ == "__main__":
+#     ROOT.gROOT.SetBatch(False)
+#     argv = (ctypes.c_char_p * len(sys.argv))()
+#     argv[:] = [arg.encode('utf-8') for arg in sys.argv]
+#     argc = ctypes.c_int(len(sys.argv))
+
+#     app = ROOT.TApplication("myapp", ctypes.byref(argc), argv)
+
+#     bayes_multiple_response_sum_compare_no_reScale()
+
+#     app.Run()
