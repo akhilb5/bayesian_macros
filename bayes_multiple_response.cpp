@@ -76,7 +76,7 @@ void process_directory(const std::string& directory) {
 
     // 3. Compute sumRa
     std::vector<double> sumRa(R, 0.0); //15,640
-    for (size_t k = 300; k < 1054; k++) {
+    for (size_t k = 360; k < 600; k++) {
         for (size_t i = 0; i < R; ++i) {
             sumRa[i] += ResponseData[i][k];
         }
@@ -90,7 +90,7 @@ void process_directory(const std::string& directory) {
 
     for (int iter = 0; iter < 8000; ++iter) {
         std::vector<double> sumRsd(R, 0.0);
-        for (int i = 360; i < 1054; i++) {
+        for (int i = 360; i < 600; i++) {
             double sumRs = 0.0;
             for (size_t j = 0; j < R; ++j)
                 sumRs += ResponseData[j][i] * s[j];
@@ -112,7 +112,7 @@ void process_directory(const std::string& directory) {
 
         // Normalize and record history
         for (size_t j = 0; j < R; ++j) {
-            s[j] /= sum_s;
+            //s[j] /= sum_s;
             s_history[j].push_back(s[j]);
         }
 
@@ -161,6 +161,7 @@ void process_directory(const std::string& directory) {
 }
 int bayes_multiple_response() {
     //process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136gs_txt");
-    process_directory("/Users/akhil/work_dir/baysean_example_UTK/Cs137");
+    process_directory("/Users/akhil/work_dir/baysean_example_UTK/I136m_txt_Total");
+    //process_directory("/Users/akhil/work_dir/baysean_example_UTK/Cs137");
     return 0;
 }
